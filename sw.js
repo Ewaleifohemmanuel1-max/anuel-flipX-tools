@@ -1,9 +1,11 @@
-const CACHE = "flipx-tools-v1";
+const CACHE = "flipx-tools-v2";
 const ASSETS = [
   "./",
   "./index.html",
+  "./manifest.json",
   "./risk-reward-calculator.html",
   "./candle-pattern-validator.html",
+  "./position-size-calculator.html",
   "./icon-192.png",
   "./icon-512.png",
   "./apple-touch-icon.png",

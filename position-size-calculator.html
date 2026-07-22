@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Position Size — FlipX</title>
+<meta name="theme-color" content="#14120F">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<link rel="icon" href="./icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Position Size">
+<style>
+  :root{
+    --paper:#F5F1E6;
+    --card:#FBF9F2;
+    --rule:#D8CFB4;
+    --ink:#242018;
+    --ink-soft:#6E664F;
+    --brass:#8C6A2F;
+    --forest:#2E5339;
+    --oxblood:#7A342A;
+    --amber:#95631A;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:Georgia,'Iowan Old Style','Palatino Linotype','Times New Roman',serif;
+    -webkit-font-smoothing:antialiased;
+    padding:24px 16px 48px;
+  }
+  .wrap{max-width:480px;margin:0 auto;}
+  header{text-align:center;margin-bottom:22px;border-bottom:2px solid var(--ink);padding-bottom:14px;}
+  header h1{font-size:clamp(1.7rem,7vw,2.3rem);margin:0 0 4px;font-weight:400;letter-spacing:0.01em;}
+  header .sub{margin:0;font-size:0.78rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-soft);}
+
+  .card{background:var(--card);border:1px solid var(--rule);border-radius:4px;padding:18px;margin-bottom:16px;}
+  .eyebrow{font-size:0.72rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:12px;}
+
+  .field{margin-bottom:16px;}
+  .field:last-child{margin-bottom:0;}
+  .field label{display:block;font-size:0.85rem;color:var(--ink-soft);margin-bottom:6px;}
+  .field label .hint{display:block;font-size:0.72rem;font-style:italic;color:var(--ink-soft);margin-top:2px;}
+  .field input{
+    width:100%;
+    font-family:ui-monospace,'SF Mono',Consolas,'Cambria Math',monospace;
+    font-size:1.15rem;
+    padding:14px;
+    border:1.5px solid var(--rule);
+    border-radius:4px;
+    background:#fff;
+    color:var(--ink);
+  }
+  .field input:focus{outline:none;border-color:var(--brass);box-shadow:0 0 0 3px rgba(140,106,47,0.15);}
+
+  .warning{
+    background:#F2E2DD;border:1px solid var(--oxblood);color:var(--oxblood);
+    padding:12px 14px;border-radius:4px;font-size:0.9rem;margin-bottom:16px;
+  }
+  .note{
+    background:#EFE8D6;border:1px solid var(--brass);color:var(--brass);
+    padding:12px 14px;border-radius:4px;font-size:0.9rem;margin-bottom:16px;
+  }
+
+  .stat-row{display:flex;gap:12px;margin-bottom:16px;}
+  .stat-row.single{margin-bottom:0;}
+  .stat{flex:1;text-align:center;padding:12px 8px;background:var(--paper);border:1px solid var(--rule);border-radius:4px;}
+  .stat-label{font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:4px;}
+  .stat-value{font-family:ui-monospace,'SF Mono',Consolas,monospace;font-size:1.4rem;font-weight:600;font-variant-numeric:tabular-nums;}
+  .stat-value.small{font-size:1.2rem;}
+  .stat-unit{font-size:0.7rem;color:var(--ink-soft);margin-top:2px;}
+
+  .lot-block{text-align:center;padding:20px 12px;margin-bottom:16px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);}
+  .lot-value{font-family:ui-monospace,'SF Mono',Consolas,monospace;font-size:clamp(2.6rem,13vw,3.6rem);font-weight:700;font-variant-numeric:tabular-nums;line-height:1;color:var(--ink-soft);}
+  .lot-value.ready{color:var(--forest);}
+  .lot-value.clamped{color:var(--amber);}
+  .lot-caption{margin-top:8px;font-size:0.82rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-soft);}
+
+  .reset{display:block;width:100%;padding:14px;background:transparent;border:1.5px solid var(--ink);border-radius:4px;font-family:Georgia,serif;font-size:0.95rem;color:var(--ink);cursor:pointer;}
+  .reset:active{background:var(--ink);color:var(--paper);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Position Size</h1>
+    <p class="sub">FlipX lot size calculator</p>
+  </header>
+
+  <section class="card">
+    <div class="eyebrow">Inputs</div>
+    <div class="field">
+      <label for="balance">Account Balance ($)</label>
+      <input type="number" id="balance" inputmode="decimal" step="any" min="0" placeholder="0.00">
+    </div>
+    <div class="field">
+      <label for="riskpct">Risk Per Trade (%)</label>
+      <input type="number" id="riskpct" inputmode="decimal" step="any" min="0" placeholder="1">
+    </div>
+    <div class="field">
+      <label for="slpips">Stop Loss (pips)</label>
+      <input type="number" id="slpips" inputmode="decimal" step="any" min="0" placeholder="0">
+    </div>
+    <div class="field">
+      <label for="pipvalue">Pip Value per Standard Lot ($)
+        <span class="hint">$10 is standard for most USD-quoted pairs (EUR/USD, GBP/USD). Check your broker for others (e.g. gold, JPY pairs differ).</span>
+      </label>
+      <input type="number" id="pipvalue" inputmode="decimal" step="any" min="0" placeholder="10">
+    </div>
+    <div class="field">
+      <label for="minlot">Broker Minimum Lot
+        <span class="hint">Most brokers won't let you trade below 0.01 (micro lot).</span>
+      </label>
+      <input type="number" id="minlot" inputmode="decimal" step="any" min="0" placeholder="0.01">
+    </div>
+  </section>
+
+  <div id="warning" class="warning" hidden></div>
+  <div id="note" class="note" hidden></div>
+
+  <section class="card">
+    <div class="eyebrow">Result</div>
+    <div class="stat-row">
+      <div class="stat">
+        <div class="stat-label">Risk Amount</div>
+        <div class="stat-value" id="riskAmt">—</div>
+        <div class="stat-unit">$</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Units</div>
+        <div class="stat-value" id="units">—</div>
+        <div class="stat-unit">1 lot = 100,000</div>
+      </div>
+    </div>
+
+    <div class="lot-block">
+      <div class="lot-value" id="lotValue">—</div>
+      <div class="lot-caption" id="lotCaption">lot size</div>
+    </div>
+
+    <div class="stat-row single">
+      <div class="stat">
+        <div class="stat-label">Actual Risk If Using Min Lot</div>
+        <div class="stat-value small" id="actualRiskPct">—</div>
+      </div>
+    </div>
+  </section>
+
+  <button type="button" id="resetBtn" class="reset">Reset</button>
+</div>
+
+<script>
+  function fmt(n, maxDp){
+    if(n===null || n===undefined || !isFinite(n)) return '—';
+    let s = n.toFixed(maxDp);
+    if(s.indexOf('.') !== -1){
+      s = s.replace(/0+$/,'');
+      s = s.replace(/\.$/,'');
+    }
+    return s;
+  }
+
+  function getVal(id, fallback){
+    const v = document.getElementById(id).value;
+    if(v === '' || v === null) return fallback;
+    const n = parseFloat(v);
+    return isFinite(n) ? n : fallback;
+  }
+
+  function calculate(){
+    const balance = getVal('balance', null);
+    const riskPct = getVal('riskpct', null);
+    const slPips = getVal('slpips', null);
+    const pipValue = getVal('pipvalue', 10);
+    const minLot = getVal('minlot', 0.01);
+
+    const warningEl = document.getElementById('warning');
+    const noteEl = document.getElementById('note');
+    const riskAmtEl = document.getElementById('riskAmt');
+    const unitsEl = document.getElementById('units');
+    const lotValueEl = document.getElementById('lotValue');
+    const lotCaptionEl = document.getElementById('lotCaption');
+    const actualRiskPctEl = document.getElementById('actualRiskPct');
+
+    warningEl.hidden = true;
+    noteEl.hidden = true;
+
+    if(balance===null || riskPct===null || slPips===null || slPips<=0 || balance<=0){
+      riskAmtEl.textContent='—'; unitsEl.textContent='—';
+      lotValueEl.textContent='—'; lotValueEl.className='lot-value';
+      lotCaptionEl.textContent='lot size';
+      actualRiskPctEl.textContent='—';
+      return;
+    }
+
+    const riskAmount = balance * (riskPct/100);
+    const rawLot = riskAmount / (slPips * pipValue);
+
+    // round down to nearest 0.01 (never round up — never risk more than intended)
+    let lot = Math.floor(rawLot * 100) / 100;
+
+    let clamped = false;
+    if(lot < minLot){
+      clamped = true;
+      lot = minLot;
+    }
+
+    const units = lot * 100000;
+    const actualRiskAmount = lot * slPips * pipValue;
+    const actualRiskPct = (actualRiskAmount / balance) * 100;
+
+    riskAmtEl.textContent = fmt(riskAmount, 2);
+    unitsEl.textContent = fmt(units, 0);
+    lotValueEl.textContent = fmt(lot, 2);
+    actualRiskPctEl.textContent = fmt(actualRiskPct, 2) + '%';
+
+    if(clamped){
+      lotValueEl.className = 'lot-value clamped';
+      lotCaptionEl.textContent = 'min lot forced';
+      noteEl.hidden = false;
+      noteEl.textContent = `Your calculated size (${fmt(rawLot,4)} lot) is below the ${fmt(minLot,2)} minimum, so you'll actually risk ${fmt(actualRiskAmount,2)} (${fmt(actualRiskPct,2)}% of balance) instead of your target ${fmt(riskPct,2)}%.`;
+    } else {
+      lotValueEl.className = 'lot-value ready';
+      lotCaptionEl.textContent = 'lot size';
+    }
+  }
+
+  document.querySelectorAll('input').forEach(el=>{
+    el.addEventListener('input', calculate);
+    el.addEventListener('change', calculate);
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', ()=>{
+    document.querySelectorAll('input[type="number"]').forEach(el=>el.value='');
+    calculate();
+  });
+
+  calculate();
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>
