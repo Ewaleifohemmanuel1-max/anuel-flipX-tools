@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Candle Validator — FlipX</title>
+<link rel="manifest" href="./candle-manifest.json">
+<meta name="theme-color" content="#14120F">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<link rel="icon" href="./icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Candle Ledger">
+<style>
+  :root{
+    --paper:#F5F1E6;
+    --card:#FBF9F2;
+    --rule:#D8CFB4;
+    --ink:#242018;
+    --ink-soft:#6E664F;
+    --brass:#8C6A2F;
+    --forest:#2E5339;
+    --oxblood:#7A342A;
+    --amber:#95631A;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:Georgia,'Iowan Old Style','Palatino Linotype','Times New Roman',serif;
+    -webkit-font-smoothing:antialiased;
+    padding:24px 16px 48px;
+  }
+  .wrap{max-width:480px;margin:0 auto;}
+  header{text-align:center;margin-bottom:22px;border-bottom:2px solid var(--ink);padding-bottom:14px;}
+  header h1{font-size:clamp(1.7rem,7vw,2.3rem);margin:0 0 4px;font-weight:400;letter-spacing:0.01em;}
+  header .sub{margin:0;font-size:0.78rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-soft);}
+
+  .card{background:var(--card);border:1px solid var(--rule);border-radius:4px;padding:18px;margin-bottom:16px;}
+  .eyebrow{font-size:0.72rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:12px;}
+  .eyebrow.mt{margin-top:16px;}
+
+  .segmented{display:flex;border:1.5px solid var(--ink);border-radius:6px;overflow:hidden;position:relative;}
+  .segmented input{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+  .segmented label{flex:1;text-align:center;padding:14px 0;font-size:1.05rem;cursor:pointer;user-select:none;color:var(--ink);}
+  .segmented label:first-of-type{border-right:1.5px solid var(--ink);}
+  .segmented input:checked + label{background:var(--ink);color:var(--paper);}
+  .segmented input:focus + label{box-shadow:inset 0 0 0 2px var(--brass);}
+
+  .rule-box{
+    background:var(--card);border:1px solid var(--brass);border-left:4px solid var(--brass);
+    padding:14px 16px;border-radius:4px;margin-bottom:16px;font-size:0.88rem;line-height:1.5;
+  }
+
+  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .field{margin-bottom:0;}
+  .field label{display:block;font-size:0.85rem;color:var(--ink-soft);margin-bottom:6px;}
+  .field input{
+    width:100%;
+    font-family:ui-monospace,'SF Mono',Consolas,'Cambria Math',monospace;
+    font-size:1.15rem;
+    padding:14px;
+    border:1.5px solid var(--rule);
+    border-radius:4px;
+    background:#fff;
+    color:var(--ink);
+  }
+  .field input:focus{outline:none;border-color:var(--brass);box-shadow:0 0 0 3px rgba(140,106,47,0.15);}
+
+  .warning{
+    background:#F2E2DD;border:1px solid var(--oxblood);color:var(--oxblood);
+    padding:12px 14px;border-radius:4px;font-size:0.9rem;margin-bottom:16px;
+  }
+
+  .stat-row{display:flex;gap:12px;margin-bottom:16px;}
+  .stat-row.single{margin-bottom:0;}
+  .stat-row:last-child{margin-bottom:0;}
+  .stat{flex:1;text-align:center;padding:12px 8px;background:var(--paper);border:1px solid var(--rule);border-radius:4px;}
+  .stat-label{font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:4px;}
+  .stat-value{font-family:ui-monospace,'SF Mono',Consolas,monospace;font-size:1.4rem;font-weight:600;font-variant-numeric:tabular-nums;}
+  .stat-value.small{font-size:1.15rem;font-family:Georgia,serif;}
+  .stat-unit{font-size:0.7rem;color:var(--ink-soft);margin-top:2px;}
+
+  .stamp-block{text-align:center;padding:24px 12px;margin-bottom:16px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);}
+  .stamp{font-size:clamp(2.2rem,10vw,3rem);font-weight:700;}
+  .stamp.valid{color:var(--forest);}
+  .stamp.invalid{color:var(--oxblood);}
+  .stamp.neutral{color:var(--ink-soft);font-size:1.4rem;}
+
+  .reset{display:block;width:100%;padding:14px;background:transparent;border:1.5px solid var(--ink);border-radius:4px;font-family:Georgia,serif;font-size:0.95rem;color:var(--ink);cursor:pointer;}
+  .reset:active{background:var(--ink);color:var(--paper);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Candle Ledger</h1>
+    <p class="sub">FlipX pattern validator</p>
+  </header>
+
+  <section class="card">
+    <div class="eyebrow">Mode</div>
+    <div class="segmented" role="radiogroup" aria-label="Pattern mode">
+      <input type="radio" id="mode-pin" name="mode" value="pin" checked>
+      <label for="mode-pin">Pin Bar</label>
+      <input type="radio" id="mode-eng" name="mode" value="eng">
+      <label for="mode-eng">Engulfing</label>
+    </div>
+  </section>
+
+  <div id="ruleBox" class="rule-box"></div>
+
+  <!-- Pin bar inputs -->
+  <section class="card" id="pinInputs">
+    <div class="eyebrow">Candle — OHLC</div>
+    <div class="field-grid">
+      <div class="field"><label for="p-open">Open</label><input type="number" id="p-open" inputmode="decimal" step="any" min="0"></div>
+      <div class="field"><label for="p-high">High</label><input type="number" id="p-high" inputmode="decimal" step="any" min="0"></div>
+      <div class="field"><label for="p-low">Low</label><input type="number" id="p-low" inputmode="decimal" step="any" min="0"></div>
+      <div class="field"><label for="p-close">Close</label><input type="number" id="p-close" inputmode="decimal" step="any" min="0"></div>
+    </div>
+  </section>
+
+  <!-- Engulfing inputs -->
+  <section class="card" id="engInputs" hidden>
+    <div class="eyebrow">Trade Direction</div>
+    <div class="segmented" role="radiogroup" aria-label="Trade direction">
+      <input type="radio" id="dir-bull" name="engdir" value="bullish" checked>
+      <label for="dir-bull">Bullish</label>
+      <input type="radio" id="dir-bear" name="engdir" value="bearish">
+      <label for="dir-bear">Bearish</label>
+    </div>
+    <div class="eyebrow mt">Candle 1 — Prior</div>
+    <div class="field-grid">
+      <div class="field"><label for="e1-open">Open</label><input type="number" id="e1-open" inputmode="decimal" step="any" min="0"></div>
+      <div class="field"><label for="e1-close">Close</label><input type="number" id="e1-close" inputmode="decimal" step="any" min="0"></div>
+    </div>
+    <div class="eyebrow mt">Candle 2 — Confirmation</div>
+    <div class="field-grid">
+      <div class="field"><label for="e2-open">Open</label><input type="number" id="e2-open" inputmode="decimal" step="any" min="0"></div>
+      <div class="field"><label for="e2-close">Close</label><input type="number" id="e2-close" inputmode="decimal" step="any" min="0"></div>
+    </div>
+  </section>
+
+  <div id="warning" class="warning" hidden></div>
+
+  <!-- Pin bar results -->
+  <section class="card" id="pinResult">
+    <div class="eyebrow">Result</div>
+    <div class="stat-row">
+      <div class="stat">
+        <div class="stat-label">Body</div>
+        <div class="stat-value" id="pBody">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Dominant Wick</div>
+        <div class="stat-value" id="pWick">—</div>
+        <div class="stat-unit" id="pWickSide"></div>
+      </div>
+    </div>
+    <div class="stat-row">
+      <div class="stat">
+        <div class="stat-label">Wick : Body</div>
+        <div class="stat-value" id="pRatio">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Body Position</div>
+        <div class="stat-value small" id="pPosition">—</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Engulfing results -->
+  <section class="card" id="engResult" hidden>
+    <div class="eyebrow">Result</div>
+    <div class="stat-row">
+      <div class="stat">
+        <div class="stat-label">Candle 1</div>
+        <div class="stat-value small" id="e1Color">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Candle 2</div>
+        <div class="stat-value small" id="e2Color">—</div>
+      </div>
+    </div>
+    <div class="stat-row single">
+      <div class="stat">
+        <div class="stat-label">Fully Engulfs?</div>
+        <div class="stat-value small" id="engCover">—</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="stamp-block">
+    <div class="stamp neutral" id="stamp">—</div>
+  </div>
+
+  <button type="button" id="resetBtn" class="reset">Reset</button>
+</div>
+
+<script>
+  const ruleTexts = {
+    pin: 'Valid when: wick \u2265 2\u00d7 body, AND body sits in outer third of the candle\u2019s range.',
+    eng: 'Valid when: candle 2\u2019s body fully covers candle 1\u2019s body, AND the colors match the trade direction (red engulfs green = bearish; green engulfs red = bullish).'
+  };
+
+  function fmt(n, maxDp){
+    if(n===null || n===undefined || !isFinite(n)) return '—';
+    let s = n.toFixed(maxDp);
+    if(s.indexOf('.') !== -1){
+      s = s.replace(/0+$/,'');
+      s = s.replace(/\.$/,'');
+    }
+    return s;
+  }
+
+  function getVal(id){
+    const v = document.getElementById(id).value;
+    if(v === '' || v === null) return null;
+    const n = parseFloat(v);
+    return isFinite(n) ? n : null;
+  }
+
+  function currentMode(){
+    return document.querySelector('input[name="mode"]:checked').value;
+  }
+
+  function updateMode(){
+    const mode = currentMode();
+    document.getElementById('pinInputs').hidden = mode!=='pin';
+    document.getElementById('engInputs').hidden = mode!=='eng';
+    document.getElementById('pinResult').hidden = mode!=='pin';
+    document.getElementById('engResult').hidden = mode!=='eng';
+    document.getElementById('ruleBox').textContent = ruleTexts[mode];
+    document.getElementById('warning').hidden = true;
+    calculate();
+  }
+
+  function calculate(){
+    if(currentMode()==='pin') calcPin(); else calcEng();
+  }
+
+  function calcPin(){
+    const o=getVal('p-open'), h=getVal('p-high'), l=getVal('p-low'), c=getVal('p-close');
+    const warningEl=document.getElementById('warning');
+    const stampEl=document.getElementById('stamp');
+    const bodyEl=document.getElementById('pBody'), wickEl=document.getElementById('pWick'),
+          wickSideEl=document.getElementById('pWickSide'), ratioEl=document.getElementById('pRatio'),
+          posEl=document.getElementById('pPosition');
+
+    function clearOut(){
+      bodyEl.textContent='—'; wickEl.textContent='—'; wickSideEl.textContent='';
+      ratioEl.textContent='—'; posEl.textContent='—';
+      stampEl.textContent='—'; stampEl.className='stamp neutral';
+    }
+
+    if(o===null||h===null||l===null||c===null){
+      clearOut(); warningEl.hidden=true; return;
+    }
+
+    const range = h-l;
+    const bodyTop=Math.max(o,c), bodyBottom=Math.min(o,c);
+    const upperWick = h-bodyTop, lowerWick = bodyBottom-l;
+
+    if(range<=0 || upperWick<-1e-9 || lowerWick<-1e-9){
+      warningEl.textContent = 'Check values — High should be the highest of the four prices, Low the lowest.';
+      warningEl.hidden=false;
+      clearOut();
+      return;
+    }
+    warningEl.hidden=true;
+
+    const body = bodyTop-bodyBottom;
+    const dominant = Math.max(upperWick, lowerWick);
+    const side = upperWick>=lowerWick ? 'Upper wick' : 'Lower wick';
+    const ratio = body===0 ? Infinity : dominant/body;
+
+    const third = range/3;
+    const inTop = bodyBottom >= (h-third) - 1e-9;
+    const inBottom = bodyTop <= (l+third) + 1e-9;
+    const inOuter = inTop || inBottom;
+    const posLabel = inTop ? 'Top third' : inBottom ? 'Bottom third' : 'Middle (not outer)';
+
+    const ratioOK = body===0 ? dominant>0 : ratio>=2;
+    const valid = ratioOK && inOuter;
+
+    bodyEl.textContent = fmt(body,4);
+    wickEl.textContent = fmt(dominant,4);
+    wickSideEl.textContent = side;
+    ratioEl.textContent = isFinite(ratio) ? fmt(ratio,2)+'\u00d7' : '\u221e';
+    posEl.textContent = posLabel;
+
+    stampEl.textContent = valid ? '✅ Valid' : '❌ Not Valid';
+    stampEl.className = 'stamp ' + (valid ? 'valid' : 'invalid');
+  }
+
+  function calcEng(){
+    const o1=getVal('e1-open'), c1=getVal('e1-close'), o2=getVal('e2-open'), c2=getVal('e2-close');
+    const direction = document.querySelector('input[name="engdir"]:checked').value;
+    const stampEl=document.getElementById('stamp');
+    const e1El=document.getElementById('e1Color'), e2El=document.getElementById('e2Color'), covEl=document.getElementById('engCover');
+    const warningEl=document.getElementById('warning');
+    warningEl.hidden=true;
+
+    if(o1===null||c1===null||o2===null||c2===null){
+      e1El.textContent='—'; e2El.textContent='—'; covEl.textContent='—';
+      stampEl.textContent='—'; stampEl.className='stamp neutral';
+      return;
+    }
+
+    const color1 = c1>o1?'Green':c1<o1?'Red':'Doji';
+    const color2 = c2>o2?'Green':c2<o2?'Red':'Doji';
+    e1El.textContent=color1;
+    e2El.textContent=color2;
+
+    const b1min=Math.min(o1,c1), b1max=Math.max(o1,c1);
+    const b2min=Math.min(o2,c2), b2max=Math.max(o2,c2);
+    const engulfs = b2min<=b1min+1e-9 && b2max>=b1max-1e-9;
+    covEl.textContent = engulfs ? 'Yes' : 'No';
+
+    let colorMatch;
+    if(direction==='bullish') colorMatch = (color1==='Red' && color2==='Green');
+    else colorMatch = (color1==='Green' && color2==='Red');
+
+    const valid = engulfs && colorMatch;
+    stampEl.textContent = valid ? '✅ Valid' : '❌ Not Valid';
+    stampEl.className = 'stamp ' + (valid ? 'valid' : 'invalid');
+  }
+
+  document.querySelectorAll('input').forEach(el=>{
+    el.addEventListener('input', calculate);
+    el.addEventListener('change', calculate);
+  });
+  document.querySelectorAll('input[name="mode"]').forEach(el=> el.addEventListener('change', updateMode));
+
+  document.getElementById('resetBtn').addEventListener('click', ()=>{
+    document.querySelectorAll('input[type="number"]').forEach(el=>el.value='');
+    calculate();
+  });
+
+  updateMode();
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>

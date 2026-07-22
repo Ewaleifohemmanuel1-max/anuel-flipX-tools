@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Risk : Reward — FlipX</title>
+<link rel="manifest" href="./rr-manifest.json">
+<meta name="theme-color" content="#14120F">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<link rel="icon" href="./icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="R:R + Lot">
+<style>
+  :root{
+    --paper:#F5F1E6;
+    --card:#FBF9F2;
+    --rule:#D8CFB4;
+    --ink:#242018;
+    --ink-soft:#6E664F;
+    --brass:#8C6A2F;
+    --forest:#2E5339;
+    --oxblood:#7A342A;
+    --amber:#95631A;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:Georgia,'Iowan Old Style','Palatino Linotype','Times New Roman',serif;
+    -webkit-font-smoothing:antialiased;
+    padding:24px 16px 48px;
+  }
+  .wrap{max-width:480px;margin:0 auto;}
+  header{text-align:center;margin-bottom:22px;border-bottom:2px solid var(--ink);padding-bottom:14px;}
+  header h1{font-size:clamp(1.7rem,7vw,2.3rem);margin:0 0 4px;font-weight:400;letter-spacing:0.01em;}
+  header .sub{margin:0;font-size:0.78rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-soft);}
+
+  .card{background:var(--card);border:1px solid var(--rule);border-radius:4px;padding:18px;margin-bottom:16px;}
+  .eyebrow{font-size:0.72rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:12px;}
+
+  .segmented{display:flex;border:1.5px solid var(--ink);border-radius:6px;overflow:hidden;position:relative;}
+  .segmented input{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+  .segmented label{flex:1;text-align:center;padding:14px 0;font-size:1.05rem;cursor:pointer;user-select:none;color:var(--ink);}
+  .segmented label:first-of-type{border-right:1.5px solid var(--ink);}
+  .segmented input:checked + label{background:var(--ink);color:var(--paper);}
+  .segmented input:focus + label{box-shadow:inset 0 0 0 2px var(--brass);}
+
+  .field{margin-bottom:16px;}
+  .field:last-child{margin-bottom:0;}
+  .field label{display:block;font-size:0.85rem;color:var(--ink-soft);margin-bottom:6px;}
+  .field label .hint{display:block;font-size:0.72rem;font-style:italic;color:var(--ink-soft);margin-top:2px;}
+  .field input{
+    width:100%;
+    font-family:ui-monospace,'SF Mono',Consolas,'Cambria Math',monospace;
+    font-size:1.15rem;
+    padding:14px;
+    border:1.5px solid var(--rule);
+    border-radius:4px;
+    background:#fff;
+    color:var(--ink);
+  }
+  .field input:focus{outline:none;border-color:var(--brass);box-shadow:0 0 0 3px rgba(140,106,47,0.15);}
+
+  .warning{
+    background:#F2E2DD;border:1px solid var(--oxblood);color:var(--oxblood);
+    padding:12px 14px;border-radius:4px;font-size:0.9rem;margin-bottom:16px;
+  }
+
+  .stat-row{display:flex;gap:12px;margin-bottom:16px;}
+  .stat-row.single{margin-bottom:0;}
+  .stat{flex:1;text-align:center;padding:12px 8px;background:var(--paper);border:1px solid var(--rule);border-radius:4px;}
+  .stat-label{font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:4px;}
+  .stat-value{font-family:ui-monospace,'SF Mono',Consolas,monospace;font-size:1.4rem;font-weight:600;font-variant-numeric:tabular-nums;}
+  .stat-value.small{font-size:1.2rem;}
+  .stat-unit{font-size:0.7rem;color:var(--ink-soft);margin-top:2px;}
+
+  .rr-block{text-align:center;padding:20px 12px;margin-bottom:16px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);}
+  .rr-value{font-family:ui-monospace,'SF Mono',Consolas,monospace;font-size:clamp(3rem,15vw,4.2rem);font-weight:700;font-variant-numeric:tabular-nums;line-height:1;color:var(--ink-soft);}
+  .rr-value.grade-green{color:var(--forest);}
+  .rr-value.grade-amber{color:var(--amber);}
+  .rr-value.grade-red{color:var(--oxblood);}
+  .rr-grade{margin-top:8px;font-size:0.82rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-soft);}
+  .rr-grade.green{color:var(--forest);}
+  .rr-grade.amber{color:var(--amber);}
+  .rr-grade.red{color:var(--oxblood);}
+
+  .reset{display:block;width:100%;padding:14px;background:transparent;border:1.5px solid var(--ink);border-radius:4px;font-family:Georgia,serif;font-size:0.95rem;color:var(--ink);cursor:pointer;}
+  .reset:active{background:var(--ink);color:var(--paper);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Risk : Reward</h1>
+    <p class="sub">FlipX position calculator</p>
+  </header>
+
+  <section class="card">
+    <div class="eyebrow">Direction</div>
+    <div class="segmented" role="radiogroup" aria-label="Trade direction">
+      <input type="radio" id="dir-buy" name="direction" value="buy" checked>
+      <label for="dir-buy">Buy</label>
+      <input type="radio" id="dir-sell" name="direction" value="sell">
+      <label for="dir-sell">Sell</label>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="eyebrow">Inputs</div>
+    <div class="field">
+      <label for="balance">Account Balance ($)</label>
+      <input type="number" id="balance" inputmode="decimal" step="any" min="0" placeholder="0.00">
+    </div>
+    <div class="field">
+      <label for="entry">Entry Price</label>
+      <input type="number" id="entry" inputmode="decimal" step="any" min="0" placeholder="0.00">
+    </div>
+    <div class="field">
+      <label for="sl">Stop Loss</label>
+      <input type="number" id="sl" inputmode="decimal" step="any" min="0" placeholder="0.00">
+    </div>
+    <div class="field">
+      <label for="tp">Take Profit / Close</label>
+      <input type="number" id="tp" inputmode="decimal" step="any" min="0" placeholder="0.00">
+    </div>
+    <div class="field">
+      <label for="riskamt">Risk Amount ($)
+        <span class="hint">Dollar amount you're risking on this trade — needed to work out % of account.</span>
+      </label>
+      <input type="number" id="riskamt" inputmode="decimal" step="any" min="0" placeholder="optional">
+    </div>
+  </section>
+
+  <div id="warning" class="warning" hidden></div>
+
+  <section class="card">
+    <div class="eyebrow">Result</div>
+    <div class="stat-row">
+      <div class="stat">
+        <div class="stat-label">Risk</div>
+        <div class="stat-value" id="riskPts">—</div>
+        <div class="stat-unit">points</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Reward</div>
+        <div class="stat-value" id="rewardPts">—</div>
+        <div class="stat-unit">points</div>
+      </div>
+    </div>
+
+    <div class="rr-block">
+      <div class="rr-value" id="rrValue">—</div>
+      <div class="rr-grade" id="rrGrade"></div>
+    </div>
+
+    <div class="stat-row single">
+      <div class="stat">
+        <div class="stat-label">Risk % of Account</div>
+        <div class="stat-value small" id="riskPct">—</div>
+      </div>
+    </div>
+  </section>
+
+  <button type="button" id="resetBtn" class="reset">Reset</button>
+</div>
+
+<script>
+  function fmt(n, maxDp){
+    if(n===null || n===undefined || !isFinite(n)) return '—';
+    let s = n.toFixed(maxDp);
+    if(s.indexOf('.') !== -1){
+      s = s.replace(/0+$/,'');
+      s = s.replace(/\.$/,'');
+    }
+    return s;
+  }
+
+  function getVal(id){
+    const v = document.getElementById(id).value;
+    if(v === '' || v === null) return null;
+    const n = parseFloat(v);
+    return isFinite(n) ? n : null;
+  }
+
+  function calculate(){
+    const balance = getVal('balance');
+    const entry = getVal('entry');
+    const sl = getVal('sl');
+    const tp = getVal('tp');
+    const riskAmt = getVal('riskamt');
+    const direction = document.querySelector('input[name="direction"]:checked').value;
+
+    const warningEl = document.getElementById('warning');
+    const riskPtsEl = document.getElementById('riskPts');
+    const rewardPtsEl = document.getElementById('rewardPts');
+    const rrValueEl = document.getElementById('rrValue');
+    const rrGradeEl = document.getElementById('rrGrade');
+    const riskPctEl = document.getElementById('riskPct');
+
+    if(entry===null || sl===null || tp===null){
+      riskPtsEl.textContent='—'; rewardPtsEl.textContent='—';
+      rrValueEl.textContent='—'; rrValueEl.className='rr-value';
+      rrGradeEl.textContent=''; rrGradeEl.className='rr-grade';
+      riskPctEl.textContent='—';
+      warningEl.hidden=true;
+      return;
+    }
+
+    let risk, reward;
+    if(direction==='buy'){ risk = entry - sl; reward = tp - entry; }
+    else { risk = sl - entry; reward = entry - tp; }
+
+    let warnings = [];
+    if(risk<=0) warnings.push(`For a ${direction.toUpperCase()}, Stop Loss should be ${direction==='buy'?'below':'above'} Entry.`);
+    if(reward<=0) warnings.push(`For a ${direction.toUpperCase()}, Take Profit should be ${direction==='buy'?'above':'below'} Entry.`);
+
+    riskPtsEl.textContent = fmt(Math.abs(risk),4);
+    rewardPtsEl.textContent = fmt(Math.abs(reward),4);
+
+    if(risk>0 && reward>0){
+      const rr = reward/risk;
+      rrValueEl.textContent = fmt(rr,2)+' : 1';
+      let grade, label;
+      if(rr>=2){grade='green'; label='Strong';}
+      else if(rr>=1){grade='amber'; label='Fair';}
+      else {grade='red'; label='Weak';}
+      rrValueEl.className = 'rr-value grade-'+grade;
+      rrGradeEl.textContent = label;
+      rrGradeEl.className = 'rr-grade '+grade;
+    } else {
+      rrValueEl.textContent='—';
+      rrValueEl.className='rr-value';
+      rrGradeEl.textContent='';
+      rrGradeEl.className='rr-grade';
+    }
+
+    warningEl.hidden = warnings.length===0;
+    if(warnings.length) warningEl.textContent = warnings.join(' ');
+
+    if(riskAmt!==null && balance!==null && balance>0){
+      riskPctEl.textContent = fmt((riskAmt/balance)*100, 2)+'%';
+    } else {
+      riskPctEl.textContent = '—';
+    }
+  }
+
+  document.querySelectorAll('input').forEach(el=>{
+    el.addEventListener('input', calculate);
+    el.addEventListener('change', calculate);
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', ()=>{
+    document.querySelectorAll('input[type="number"]').forEach(el=>el.value='');
+    document.getElementById('dir-buy').checked=true;
+    calculate();
+  });
+
+  calculate();
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>

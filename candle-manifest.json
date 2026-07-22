@@ -1,0 +1,22 @@
+{
+  "name": "FlipX Candle Ledger",
+  "short_name": "Candle Ledger",
+  "start_url": "./candle-pattern-validator.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#14120F",
+  "theme_color": "#14120F",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
